@@ -1,7 +1,8 @@
-#include "psort.h"
+#include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
-// #include <time.h>
+#include <time.h>
+#include <omp.h>
 
 int comp(const void *elem1, const void *elem2) 
 {
@@ -37,7 +38,7 @@ int find(uint32_t *S, int p, uint32_t x) {
 
 }
 
-void ParallelSort(uint32_t *data, uint32_t n, int p) {
+void ParallelSort(uint32_t *data, uint32_t n, int p, int nc) {
     if (n <= p*p)
     {
         qsort(data, n, sizeof(uint32_t), comp);
@@ -53,6 +54,7 @@ void ParallelSort(uint32_t *data, uint32_t n, int p) {
     uint32_t *S = malloc((p-1) * sizeof(*S));
     // print_arr(data, n);
     // clock_t start = clock();
+    omp_set_num_threads(nc);
     #pragma omp parallel
     {
         #pragma omp single
@@ -166,4 +168,41 @@ void ParallelSort(uint32_t *data, uint32_t n, int p) {
 
     }
 }
+
+int comp2(const void *elem1, const void *elem2) 
+{
+    uint32_t f = *((uint32_t*)elem1);
+    uint32_t s = *((uint32_t*)elem2);
+    if (f > s) return  1;
+    if (f < s) return -1;
+    return 0;
+}
+
+int main(int argc, char const *argv[])
+{
+    uint32_t n = 1048576;
+    clock_t start;
+    uint32_t* data = malloc(n*sizeof(*data));
+    for (uint32_t i = 0; i < n; i++)
+    {
+        data[i] = rand() % 4294967296;
+    }
+    start = clock();
+    qsort(data, n, sizeof(uint32_t), comp2);
+    printf("0: %f\n", (float)(clock() - start) / CLOCKS_PER_SEC);
+    for (int p = 2; p <= 24; p+=2)
+    {
+        for (uint32_t i = 0; i < n; i++)
+        {
+            data[i] = rand() % 4294967296;
+        }
+        start = clock();
+        ParallelSort(data, n, p, p);
+        printf("%d: %f\n", p, (float)(clock() - start) / CLOCKS_PER_SEC);
+    }
+    
+    free(data);
+    return 0;
+}
+
 
