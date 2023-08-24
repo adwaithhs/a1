@@ -180,7 +180,7 @@ int comp2(const void *elem1, const void *elem2)
 
 int main(int argc, char const *argv[])
 {
-    uint32_t n = 1048576;
+    uint32_t n = 1048576; // UINT32_MAX
     clock_t start;
     uint32_t* data = malloc(n*sizeof(*data));
     for (uint32_t i = 0; i < n; i++)
